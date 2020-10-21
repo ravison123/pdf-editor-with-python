@@ -1,99 +1,113 @@
-def merge_files():
-    os.chdir(os.path.dirname(__file__))
-    # Extracting today's date so as that can be appended to the merged file
-    date_ = datetime.datetime.now()
-    year, month, day = date_.year, date_.month, date_.day
-    merged_file_name = f"merged_file_{year}{month}{day}.pdf"
-    print('Merging the files:')
-    pdf_writer = PyPDF2.PdfFileWriter()
+class PdfEditor:
+    def __init__(self):
+        self.dir = os.path.dirname(__file__)
+        date_ = datetime.datetime.now()
+        # Extracting today's date so as that can be appended to the merged file
+        year, month, day = date_.year, date_.month, date_.day
+        self.date_string = f'{year}{month}{day}.pdf'
+        os.chdir(self.dir)
+        self.list_pdf = []
+        for file_ in os.listdir():
+            if file_.endswith('.pdf'):
+                self.list_pdf.append(file_)
 
-    for file_ in os.listdir():
-        if file_.endswith('.pdf'):
+    def merge_files(self):
+        merged_file_name = f"merged_file_{self.date_string}"
+        print('Merging the files:')
+        pdf_writer = PyPDF2.PdfFileWriter()
+
+        for file_ in self.list_pdf:
             pdf_reader = PyPDF2.PdfFileReader(file_, strict = False)
             for page in range(pdf_reader.getNumPages()):
                 pdf_writer.addPage(pdf_reader.getPage(page))
 
-    newdir = os.path.dirname(__file__) + '\\' + 'merged_folder'
-    try:
-        os.mkdir(newdir)
-    except:
-        None
-    os.chdir(newdir)
-    with open(merged_file_name, 'wb') as out:
-        pdf_writer.write(out)
+        newdir = self.dir + '\\' + 'merged_folder'
+        try:
+            os.mkdir(newdir)
+        except:
+            None
+        os.chdir(newdir)
+        with open(merged_file_name, 'wb') as out:
+            pdf_writer.write(out)
 
-def remove_pages():
-    os.chdir(os.path.dirname(__file__))
-    file_name = input('Please enter pdf file name:')
-    if file_name.endswith('.pdf') == False:
-        print("Please enter file name including '.pdf' extension")
-        return None
-    if file_name not in os.listdir():
-        print("File not found in the working directory")
-        return None
+        print('Files merged successfully!!')
+
+    def remove_pages(self, file_name, page_range):
+        pdf_reader = PyPDF2.PdfFileReader(file_name, strict = False)
+        num_pages = pdf_reader.getNumPages()
         
-    pdf_reader = PyPDF2.PdfFileReader(file_name, strict = False)
-    num_pages = pdf_reader.getNumPages()
+        list_pages = page_range.split('-')
 
-    pages_to_remove = input('Please enter page / range of pages to be removed: ')
-    list_pages = pages_to_remove.split('-')
-    if len(list_pages) > 2:
-        print('Incorrect input for pages')
-        return None
-    if len(list_pages) == 2:
+        if len(list_pages) == 2:
+            list_of_pages = range(int(list_pages[0]) - 1, int(list_pages[1]))
+        else:
+            list_of_pages = [int(list_pages[0]) - 1]
+
+        pdf_writer = PyPDF2.PdfFileWriter()
+        pdf_writer1 = PyPDF2.PdfFileWriter()
+
+        for i in range(num_pages):
+            if i in list_of_pages:
+                pdf_writer.addPage(pdf_reader.getPage(i))
+                continue
+            pdf_writer1.addPage(pdf_reader.getPage(i))
+        
+        newdir = self.dir + '\\' + 'remove_folder'
         try:
-            int(list_pages[0])
-            int(list_pages[1])
+            os.mkdir(newdir)
         except:
+            None
+        os.chdir(newdir)
+        removed_file_name = f'removed pages {self.date_string}'
+        edited_file_name = f'edited file {self.date_string}'
+        with open(removed_file_name, 'wb') as out:
+            pdf_writer.write(out)
+        with open(edited_file_name, 'wb') as out:
+            pdf_writer1.write(out)
+
+        print('Specified pages successfully removed from the file!!')
+
+    def page_num_check(self, file_name, page_range):
+        pdf_reader = PyPDF2.PdfFileReader(file_name, strict = False)
+        num_pages = pdf_reader.getNumPages()
+
+        list_pages = page_range.split('-')
+        if len(list_pages) > 2:
             print('Incorrect input for pages')
             return None
-    if len(list_pages) == 2:
-        if int(list_pages[0]) > int(list_pages[1]):
-            print('Error, First number in the range is greater than second')
-            print('Please provide the input again')
-            return None
-    if len(list_pages) == 2:
-        if int(list_pages[0]) > num_pages or int(list_pages[1]) > num_pages:
-            print('Error, Range of pages entered is greater than total number of pages')
-            print('Please provide the input  again')
-            return None
+        elif len(list_pages) == 2:
+            try:
+                int(list_pages[0])
+                int(list_pages[1])
+            except:
+                print('Incorrect input for pages')
+                return None
+            if int(list_pages[0]) > int(list_pages[1]):
+                print('Error, First number in the range is greater than second')
+                print('Please provide the input again')
+                return None
+            if int(list_pages[0]) > num_pages or int(list_pages[1]) > num_pages:
+                print('Error, Range of pages entered is greater than total number of pages')
+                print('Please provide the input  again')
+                return None
 
-    if len(list_pages) == 1:
-        try:
-            int(list_pages[0])
-        except:
-            print('Incorrect input for pages')
+        if len(list_pages) == 1:
+            try:
+                int(list_pages[0])
+            except:
+                print('Incorrect input for pages')
+                return None
+            if int(list_pages[0]) > num_pages:
+                print('Error, page number entered is greater than total number of pages')
+                print('Please provide the input  again')
+                return None
+        return True
+
+    def file_name_check(self, file_name):
+        if file_name not in self.list_pdf or file_name.endswith('.pdf') == False:
+            print("Error, Please ensure that file name has '.pdf' extension and file is present in the program directory")
             return None
-    if len(list_pages) == 1:
-        if int(list_pages[0]) > num_pages:
-            print('Error, page number entered is greater than total number of pages')
-            print('Please provide the input  again')
-            return None
-
-    if len(list_pages) == 2:
-        list_of_pages = range(int(list_pages[0]) - 1, int(list_pages[1]))
-    else:
-        list_of_pages = [int(list_pages[0]) - 1]
-
-    pdf_writer = PyPDF2.PdfFileWriter()
-    pdf_writer1 = PyPDF2.PdfFileWriter()
-
-    for i in range(num_pages):
-        if i in list_of_pages:
-            pdf_writer.addPage(pdf_reader.getPage(i))
-            continue
-        pdf_writer1.addPage(pdf_reader.getPage(i))
-    
-    newdir = os.path.dirname(__file__) + '\\' + 'remove_folder'
-    try:
-        os.mkdir(newdir)
-    except:
-        None
-    os.chdir(newdir)
-    with open('removed pages.pdf', 'wb') as out:
-        pdf_writer.write(out)
-    with open('edited file.pdf', 'wb') as out:
-        pdf_writer1.write(out)
+        return True
 
 import PyPDF2
 import os
@@ -110,7 +124,16 @@ user_input_string = '''Please select what you want to do:
 2. Remove page/s
 3. Edit file (rotate pages)'''
 user_input = input(user_input_string)
+editor = PdfEditor()
 if user_input == '1':
-    merge_files()
+    editor.merge_files()
 elif user_input == '2':
-    remove_pages()
+    while True:
+        file_name = input('Please provide name of the pdf file: ')
+        if editor.file_name_check(file_name) == True:
+            break
+    while True:
+        page_range = input('Please enter page / range of pages to be removed: ')
+        if editor.page_num_check(file_name, page_range) == True:
+            break
+    editor.remove_pages(file_name, page_range)
