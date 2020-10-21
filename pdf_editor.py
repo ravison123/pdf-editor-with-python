@@ -109,6 +109,12 @@ class PdfEditor:
             return None
         return True
 
+    def edit_file(self, file_name, page_range, angle):
+        pass
+
+    def angle_check(self, angle):
+        pass
+
 import PyPDF2
 import os
 import datetime
@@ -137,3 +143,17 @@ elif user_input == '2':
         if editor.page_num_check(file_name, page_range) == True:
             break
     editor.remove_pages(file_name, page_range)
+elif user_input == 3:
+    while True:
+        file_name = input('Please provide name of the pdf file: ')
+        if editor.file_name_check(file_name) == True:
+            break
+    while True:
+        page_range = input('Please enter page / range of pages to be edited: ')
+        if editor.page_num_check(file_name, page_range) == True:
+            break
+    while True:
+        angle = input('Please enter angle of rotation: ')
+        if editor.angle_check(angle) == True:
+            break
+    editor.edit_file(file_name, page_range, angle)
