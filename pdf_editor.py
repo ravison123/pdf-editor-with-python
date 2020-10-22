@@ -110,10 +110,53 @@ class PdfEditor:
         return True
 
     def edit_file(self, file_name, page_range, angle):
-        pass
+        pdf_reader = PyPDF2.PdfFileReader(file_name, strict = False)
+        num_pages = pdf_reader.getNumPages()
+        
+        list_pages = page_range.split('-')
+
+
+        if len(list_pages) == 2:
+            list_of_pages = range(int(list_pages[0]) - 1, int(list_pages[1]))
+        else:
+            list_of_pages = [int(list_pages[0]) - 1]
+
+        angle = int(angle)
+
+        pdf_writer = PyPDF2.PdfFileWriter()
+
+        for page in range(num_pages):
+            if page in list_of_pages:
+                new_page = pdf_reader.getPage(page).rotateClockwise(angle)
+                pdf_writer.addPage(new_page)
+                continue
+            pdf_writer.addPage(pdf_reader.getPage(page))
+
+        newdir = self.dir + '\\' + 'edited_folder'
+        try:
+            os.mkdir(newdir)
+        except:
+            None
+        os.chdir(newdir)
+
+        edited_file_name = f'edited file {self.date_string}'
+        with open(edited_file_name, 'wb') as out:
+            pdf_writer.write(out)
+
+        print('The file has been edited successfully!!')
 
     def angle_check(self, angle):
-        pass
+        angle_list = [0, 90, 180, 270, 360]
+        try:
+            angle = int(angle)
+        except:
+            print('Error, Please input integer values for angle')
+            return None
+        if abs(int(angle)) not in angle_list:
+            print('Error, Incorrect input for angle')
+            print('Please input angle in multiples of 90 degrees. i.e. 90, 180, 270, 360 etc.')
+            return None
+        return True
 
 import PyPDF2
 import os
@@ -125,6 +168,10 @@ print("2. Merged file will be found in 'merged_file' folder")
 print('3. For merge command, all .pdf files in the program directory will be meged together')
 print("4. For merge command, the merged .pdf file will be found in the folder 'merged_file'")
 print("5. For remove page/s command, please enter a single page number to be removed / enter range of pages to be removed e.g. 4-8 ")
+print("6. For remove page/s command, two files (edited file and remove pages file) will be created. The files will be saved in 'remove_folder' folder")
+print("7. For edit file command, angle of rotation shall be provided in multiples of 90 degree (max. angle can be provided is 360 degrees)")
+print("8. For edit file command, enter positive value of angle for clockwise rotation e.g. +90")
+print("9. For edit file command, enter negative value of angle for anti-clockwise rotation e.g. -90")
 user_input_string = '''Please select what you want to do:
 1. Merge files
 2. Remove page/s
@@ -143,7 +190,7 @@ elif user_input == '2':
         if editor.page_num_check(file_name, page_range) == True:
             break
     editor.remove_pages(file_name, page_range)
-elif user_input == 3:
+elif user_input == '3':
     while True:
         file_name = input('Please provide name of the pdf file: ')
         if editor.file_name_check(file_name) == True:
