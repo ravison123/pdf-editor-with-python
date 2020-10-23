@@ -11,12 +11,16 @@ class PdfEditor:
             if file_.endswith('.pdf'):
                 self.list_pdf.append(file_)
 
-    def merge_files(self):
+    def merge_files(self, merge_input):
         merged_file_name = f"merged_file_{self.date_string}"
-        print('Merging the files:')
         pdf_writer = PyPDF2.PdfFileWriter()
 
-        for file_ in self.list_pdf:
+        if merge_input == '1':
+            merge_file_list = self.list_pdf
+        else:
+            merge_file_list = editor.pdf_file_list()
+        print('Merging the files...')
+        for file_ in merge_file_list:
             pdf_reader = PyPDF2.PdfFileReader(file_, strict = False)
             for page in range(pdf_reader.getNumPages()):
                 pdf_writer.addPage(pdf_reader.getPage(page))
@@ -158,28 +162,59 @@ class PdfEditor:
             return None
         return True
 
+    def pdf_file_list(self):
+        while True:
+            num_of_files = input('Please input number of files to merge: ')
+            try:
+                num_of_files = int(num_of_files)
+            except:
+                print('Error, please input an integer value')
+                continue
+            if int(num_of_files) > len(self.list_pdf):
+                print('Error, number provided is greater than total number of pdf files present in program directory')
+                continue
+            break
+        count = 1
+        files_list = []
+        while count <= num_of_files:
+            file_ = input('Please enter name of file num {} '.format(count))
+            if file_ not in self.list_pdf:
+                print('Error, file not found in program directory')
+                print('Ensure that file input has ".pdf" extension')
+                continue
+            count = count + 1
+            files_list.append(file_)
+        return files_list
+
 import PyPDF2
 import os
 import datetime
 
 print('Instructions for using this program:')
-print('1. Please keep the pdf files to merge in the same folder as that of this program')
-print("2. Merged file will be found in 'merged_file' folder")
-print('3. For merge command, all .pdf files in the program directory will be meged together')
-print("4. For merge command, the merged .pdf file will be found in the folder 'merged_file'")
-print("5. For remove page/s command, please enter a single page number to be removed / enter range of pages to be removed e.g. 4-8 ")
-print("6. For remove page/s command, two files (edited file and remove pages file) will be created. The files will be saved in 'remove_folder' folder")
-print("7. For edit file command, angle of rotation shall be provided in multiples of 90 degree (max. angle can be provided is 360 degrees)")
-print("8. For edit file command, enter positive value of angle for clockwise rotation e.g. +90")
-print("9. For edit file command, enter negative value of angle for anti-clockwise rotation e.g. -90")
+print('1. Please keep the pdf files to merge in the same folder as that of this program (program directory)')
+print("2. For Merge files command, merged file will be found in 'merged_file' folder. 'merged_file' folder will be created if not present in the program directory")
+print('3. For merge command, if merge all files in program directory is selected; all pdf files in that directory will be merged alphabetically')
+print("4. For remove page/s command, please enter a single page number / range of pages to be removed e.g. 1 or 4-8 ")
+print("5. For remove page/s command, two files (edited file and remove pages file) will be created in 'remove_folder' folder")
+print("6. For edit file command, angle of rotation shall be provided in multiples of 90 degree (max. angle can be provided is 360 degrees)")
+print("7. For edit file command, enter positive value of angle for clockwise rotation e.g. +90")
+print("8. For edit file command, enter negative value of angle for anti-clockwise rotation e.g. -90")
 user_input_string = '''Please select what you want to do:
 1. Merge files
 2. Remove page/s
-3. Edit file (rotate pages)'''
+3. Edit file (rotate pages): '''
 user_input = input(user_input_string)
 editor = PdfEditor()
 if user_input == '1':
-    editor.merge_files()
+    merge_string = '''Please select one of the following option:
+    1. Merge all files in program directory
+    2. Provide a list of files and then merge: '''
+    while True:
+        merge_input = input(merge_string)
+        if merge_input in ['1', '2']:
+            break
+        print('Error, Incorrect Input. Please enter again')
+    editor.merge_files(merge_input)
 elif user_input == '2':
     while True:
         file_name = input('Please provide name of the pdf file: ')
