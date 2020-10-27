@@ -1,11 +1,14 @@
 class PdfEditor:
     def __init__(self):
-        self.dir = os.path.dirname(__file__)
-        date_ = datetime.datetime.now()
+        # Extracting absolute path to be used in self.dir instance
+        application_path = os.path.dirname(os.path.abspath(__file__))
+        self.dir = application_path
         # Extracting today's date so as that can be appended to the merged file
+        date_ = datetime.datetime.now()
         year, month, day = date_.year, date_.month, date_.day
         self.date_string = f'{year}{month}{day}.pdf'
         os.chdir(self.dir)
+        # list_pdf : List of all pdf files in the current working directory
         self.list_pdf = []
         for file_ in os.listdir():
             if file_.endswith('.pdf'):
@@ -15,6 +18,9 @@ class PdfEditor:
         merged_file_name = f"merged_file_{self.date_string}"
         pdf_writer = PyPDF2.PdfFileWriter()
 
+        # merge_file_list : List of pdf files to be merged
+        # 1. All pdf files in the crrent working directory to be merged
+        # 2. Provide list of pdf files as input
         if merge_input == '1':
             merge_file_list = self.list_pdf
         else:
@@ -25,6 +31,7 @@ class PdfEditor:
             for page in range(pdf_reader.getNumPages()):
                 pdf_writer.addPage(pdf_reader.getPage(page))
 
+        # Create new directory 'merged_folder'
         newdir = self.dir + '\\' + 'merged_folder'
         try:
             os.mkdir(newdir)
@@ -40,13 +47,21 @@ class PdfEditor:
         pdf_reader = PyPDF2.PdfFileReader(file_name, strict = False)
         num_pages = pdf_reader.getNumPages()
         
+        # list_pages: list of 1 or 2 integers
+        # 1 integer in case of single page to be removed
+        # 2 integer in case of range of pages to be removed
         list_pages = page_range.split('-')
 
+        # list_of_pages: Actual list of pages to be removed
+        # Formed from list_pages
+        # e.g. list_pages = [4, 8], then list_of_pages = [4, 5, 6, 7, 8]
         if len(list_pages) == 2:
             list_of_pages = range(int(list_pages[0]) - 1, int(list_pages[1]))
         else:
             list_of_pages = [int(list_pages[0]) - 1]
 
+        # pdf_writer: pdf writer for removed pages
+        # pdf_writer1: pdf writer for edite file (with pages removed)
         pdf_writer = PyPDF2.PdfFileWriter()
         pdf_writer1 = PyPDF2.PdfFileWriter()
 
@@ -72,35 +87,43 @@ class PdfEditor:
         print('Specified pages successfully removed from the file!!')
 
     def page_num_check(self, file_name, page_range):
+        # If this function returns True, then page numbers provided by user are correct
+        # If return value is None, input by user is incorrect
         pdf_reader = PyPDF2.PdfFileReader(file_name, strict = False)
         num_pages = pdf_reader.getNumPages()
 
         list_pages = page_range.split('-')
+        # If input is not in the form of "'page 1' - 'page 2'"
         if len(list_pages) > 2:
             print('Incorrect input for pages')
             return None
         elif len(list_pages) == 2:
+            # Checking for non integer values
             try:
                 int(list_pages[0])
                 int(list_pages[1])
             except:
                 print('Incorrect input for pages')
                 return None
+            # If first number is greater than second
             if int(list_pages[0]) > int(list_pages[1]):
                 print('Error, First number in the range is greater than second')
                 print('Please provide the input again')
                 return None
+            # If either number is greater than total number of pages
             if int(list_pages[0]) > num_pages or int(list_pages[1]) > num_pages:
                 print('Error, Range of pages entered is greater than total number of pages')
                 print('Please provide the input  again')
                 return None
 
         if len(list_pages) == 1:
+            # Checking for non integer values
             try:
                 int(list_pages[0])
             except:
                 print('Incorrect input for pages')
                 return None
+            # If the number is greater than total number of pages
             if int(list_pages[0]) > num_pages:
                 print('Error, page number entered is greater than total number of pages')
                 print('Please provide the input  again')
@@ -108,6 +131,8 @@ class PdfEditor:
         return True
 
     def file_name_check(self, file_name):
+        # If this function returns True, then file name provided by user is correct
+        # Otherwise the file name is incorrect
         if file_name not in self.list_pdf or file_name.endswith('.pdf') == False:
             print("Error, Please ensure that file name has '.pdf' extension and file is present in the program directory")
             return None
@@ -119,6 +144,13 @@ class PdfEditor:
         
         list_pages = page_range.split('-')
 
+        # list_pages: list of 1 or 2 integers
+        # 1 integer in case of single page to be edited
+        # 2 integer in case of range of pages to be edited
+
+        # list_of_pages: Actual list of pages to be removed
+        # Formed from list_pages
+        # e.g. list_pages = [4, 8], then list_of_pages = [4, 5, 6, 7, 8]
 
         if len(list_pages) == 2:
             list_of_pages = range(int(list_pages[0]) - 1, int(list_pages[1]))
@@ -150,6 +182,7 @@ class PdfEditor:
         print('The file has been edited successfully!!')
 
     def angle_check(self, angle):
+        # If this function returns True, then angle input provided by user is correct
         angle_list = [0, 90, 180, 270, 360]
         try:
             angle = int(angle)
@@ -163,6 +196,7 @@ class PdfEditor:
         return True
 
     def pdf_file_list(self):
+        # This method takes input from user and returns a list of files
         while True:
             num_of_files = input('Please input number of files to merge: ')
             try:
@@ -189,6 +223,7 @@ class PdfEditor:
 import PyPDF2
 import os
 import datetime
+import sys
 
 print('Instructions for using this program:')
 print('1. Please keep the pdf files to merge in the same folder as that of this program (program directory)')
@@ -199,43 +234,47 @@ print("5. For remove page/s command, two files (edited file and remove pages fil
 print("6. For edit file command, angle of rotation shall be provided in multiples of 90 degree (max. angle can be provided is 360 degrees)")
 print("7. For edit file command, enter positive value of angle for clockwise rotation e.g. +90")
 print("8. For edit file command, enter negative value of angle for anti-clockwise rotation e.g. -90")
-user_input_string = '''Please select what you want to do:
-1. Merge files
-2. Remove page/s
-3. Edit file (rotate pages): '''
-user_input = input(user_input_string)
-editor = PdfEditor()
-if user_input == '1':
-    merge_string = '''Please select one of the following option:
-    1. Merge all files in program directory
-    2. Provide a list of files and then merge: '''
-    while True:
-        merge_input = input(merge_string)
-        if merge_input in ['1', '2']:
-            break
-        print('Error, Incorrect Input. Please enter again')
-    editor.merge_files(merge_input)
-elif user_input == '2':
-    while True:
-        file_name = input('Please provide name of the pdf file: ')
-        if editor.file_name_check(file_name) == True:
-            break
-    while True:
-        page_range = input('Please enter page / range of pages to be removed: ')
-        if editor.page_num_check(file_name, page_range) == True:
-            break
-    editor.remove_pages(file_name, page_range)
-elif user_input == '3':
-    while True:
-        file_name = input('Please provide name of the pdf file: ')
-        if editor.file_name_check(file_name) == True:
-            break
-    while True:
-        page_range = input('Please enter page / range of pages to be edited: ')
-        if editor.page_num_check(file_name, page_range) == True:
-            break
-    while True:
-        angle = input('Please enter angle of rotation: ')
-        if editor.angle_check(angle) == True:
-            break
-    editor.edit_file(file_name, page_range, angle)
+while True:
+    user_input_string = '''Please select what you want to do:
+    1. Merge files
+    2. Remove page/s
+    3. Edit file (rotate pages)
+    Press "Enter" to exit: '''
+    editor = PdfEditor()
+    user_input = input(user_input_string)
+    if user_input == "":
+        break 
+    if user_input == '1':
+        merge_string = '''Please select one of the following option:
+        1. Merge all files in program directory
+        2. Provide a list of files and then merge: '''
+        while True:
+            merge_input = input(merge_string)
+            if merge_input in ['1', '2']:
+                break
+            print('Error, Incorrect Input. Please enter again')
+        editor.merge_files(merge_input)
+    elif user_input == '2':
+        while True:
+            file_name = input('Please provide name of the pdf file: ')
+            if editor.file_name_check(file_name) == True:
+                break
+        while True:
+            page_range = input('Please enter page / range of pages to be removed: ')
+            if editor.page_num_check(file_name, page_range) == True:
+                break
+        editor.remove_pages(file_name, page_range)
+    elif user_input == '3':
+        while True:
+            file_name = input('Please provide name of the pdf file: ')
+            if editor.file_name_check(file_name) == True:
+                break
+        while True:
+            page_range = input('Please enter page / range of pages to be edited: ')
+            if editor.page_num_check(file_name, page_range) == True:
+                break
+        while True:
+            angle = input('Please enter angle of rotation: ')
+            if editor.angle_check(angle) == True:
+                break
+        editor.edit_file(file_name, page_range, angle)
