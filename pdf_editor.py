@@ -14,6 +14,9 @@ class PdfEditor:
             if file_.endswith('.pdf'):
                 self.list_pdf.append(file_)
 
+    def __del__(self):
+        print('')
+
     def merge_files(self, merge_input):
         merged_file_name = f"merged_file_{self.date_string}"
         pdf_writer = PyPDF2.PdfFileWriter()
@@ -41,6 +44,7 @@ class PdfEditor:
         with open(merged_file_name, 'wb') as out:
             pdf_writer.write(out)
 
+        os.chdir(self.dir)
         print('Files merged successfully!!')
 
     def remove_pages(self, file_name, page_range):
@@ -84,6 +88,7 @@ class PdfEditor:
         with open(edited_file_name, 'wb') as out:
             pdf_writer1.write(out)
 
+        os.chdir(self.dir)
         print('Specified pages successfully removed from the file!!')
 
     def page_num_check(self, file_name, page_range):
@@ -131,6 +136,7 @@ class PdfEditor:
         return True
 
     def file_name_check(self, file_name):
+        os.chdir(self.dir)
         # If this function returns True, then file name provided by user is correct
         # Otherwise the file name is incorrect
         if file_name not in self.list_pdf or file_name.endswith('.pdf') == False:
@@ -179,6 +185,7 @@ class PdfEditor:
         with open(edited_file_name, 'wb') as out:
             pdf_writer.write(out)
 
+        os.chdir(self.dir)
         print('The file has been edited successfully!!')
 
     def angle_check(self, angle):
@@ -223,7 +230,6 @@ class PdfEditor:
 import PyPDF2
 import os
 import datetime
-import sys
 
 print('Instructions for using this program:')
 print('1. Please keep the pdf files to merge in the same folder as that of this program (program directory)')
@@ -235,12 +241,13 @@ print("6. For edit file command, angle of rotation shall be provided in multiple
 print("7. For edit file command, enter positive value of angle for clockwise rotation e.g. +90")
 print("8. For edit file command, enter negative value of angle for anti-clockwise rotation e.g. -90")
 while True:
+    editor = PdfEditor()
+    print(editor.dir)
     user_input_string = '''Please select what you want to do:
     1. Merge files
     2. Remove page/s
     3. Edit file (rotate pages)
     Press "Enter" to exit: '''
-    editor = PdfEditor()
     user_input = input(user_input_string)
     if user_input == "":
         break 
@@ -278,3 +285,4 @@ while True:
             if editor.angle_check(angle) == True:
                 break
         editor.edit_file(file_name, page_range, angle)
+        del editor
